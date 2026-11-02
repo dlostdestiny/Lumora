@@ -13,11 +13,20 @@
   --hp-low: #ff5d6c;
   --bond: #ff8fd0;
   --radius: 14px;
+  --font: "Nunito", "M PLUS Rounded 1c", "Segoe UI", system-ui, sans-serif;
+  --lh: 1.5;
+  --lh-tight: 1.3;
+  --fs-small: 13px;
+  --fs-body: 15px;
+  --fs-lead: 17px;
+  --ink-soft: #e4dcf5;
+  --em: #ffe08a;
+  --p-gap: .6em;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; user-select: none; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--fs-body); line-height: var(--lh); overflow: hidden; user-select: none; }
 #app { position: fixed; inset: 0; }
-button { font: inherit; color: inherit; cursor: pointer; }
+button { font-family: inherit; font-size: inherit; line-height: var(--lh-tight);  color: inherit; cursor: pointer; }
 .hidden { display: none !important; }
 
 /* ---------- Knöpfe ---------- */
@@ -889,6 +898,51 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .db-row b { text-align: right; color: #ffd977; }
 
 /* ---------- Handy-Ansicht ---------- */
+/* ---------- Karte größer (Maßstab 1,4) und Info-Kästchen über dem Feld ---------- */
+.map-svg { width: 100%; height: auto; }
+.map-svg .edge { stroke-width: 4; stroke-dasharray: 2 12; }
+.map-svg .edge.next { stroke-width: 5; stroke-dasharray: 11 11; }
+.map-svg .edge.walked-glow { stroke-width: 16; }
+.map-svg .edge.walked { stroke-width: 6; }
+.map-svg .edge.flow { stroke-width: 3.5; stroke-dasharray: 8 56; }
+.map-svg .start text { font-size: 15px; }
+.map-svg .node text { font-size: 29px; }
+.map-svg .node text.check { font-size: 18px; }
+.map-svg .node text.dbl { font-size: 18px; }
+.map-svg .node circle.base { stroke-width: 4; }
+.map-svg .node.open circle.base { stroke-width: 5; }
+.map-svg .node .rim { stroke-width: 2; }
+.wzone .wz-icon { font-size: 21px; }
+.wzone .wz-name { font-size: 17px; }
+.map-tip { z-index: 40; width: 250px; padding: 12px 14px; font-size: var(--fs-small); line-height: var(--lh); --arrow-x: 50%; }
+.map-tip b { font-size: 16px; margin-bottom: 4px; line-height: var(--lh-tight); }
+.map-tip > div + div, .map-tip > span { margin-top: 3px; }
+.map-tip::after { content: ""; position: absolute; left: var(--arrow-x); width: 12px; height: 12px; margin-left: -6px; background: rgba(40, 30, 62, .96); border: 1px solid rgba(255, 255, 255, .14); transform: rotate(45deg); }
+.map-tip.above::after { bottom: -7px; border-top: 0; border-left: 0; }
+.map-tip.below::after { top: -7px; border-bottom: 0; border-right: 0; }
+
+/* ---------- Texte: Lesbarkeit und Hierarchie ---------- */
+p { line-height: var(--lh); margin: 0 0 var(--p-gap); }
+p:last-child { margin-bottom: 0; }
+b, strong { color: var(--em); font-weight: 800; }
+h1, h2, h3, h4 { line-height: var(--lh-tight); font-weight: 900; }
+h3 { font-size: 20px; }
+h4 { font-size: 15px; letter-spacing: .3px; }
+small, .muted { line-height: var(--lh); }
+.card p, .guide-card p, .tut-body p, .event-box p, .dialog .box, .battle .msg { color: var(--ink-soft); line-height: var(--lh); }
+.card p { font-size: var(--fs-small); margin: 6px 0; }
+.card h3, .modal h3, .tut-body b, .map-tip b, .event-box h2 { color: #fff3c4; }
+.tip:hover::after { font-size: var(--fs-small); line-height: 1.4; padding: 8px 10px; }
+.modal .panel p, .modal .panel .sub, .modal .panel li { line-height: var(--lh); }
+.modal h3 { margin-bottom: 12px; }
+.tut-body p { font-size: var(--fs-body); }
+.tut-body small { font-size: 12px; }
+.tut-off { font-size: var(--fs-small); }
+.guide-card p { font-size: var(--fs-small); }
+.stats-mini, .set-chip, .echo-tag, .map-top .sub, .dy small { font-size: var(--fs-small); }
+button b, .btn b, .badge b, .purse b, .team-card b, .set-chip.complete b { color: inherit; }
+.dialog .box b, .event-box p b, .battle .msg b, .tut-body p b { color: var(--em); }
+
 @media (max-width: 760px) {
   body { font-size: 14px; }
   /* Schrein */
