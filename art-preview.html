@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Lumora Grafik-Vorschau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { padding: 16px; overflow: auto; }
+    h2 { font-size: 16px; margin: 16px 0 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+    .card { background: #2a2238; border-radius: 12px; padding: 8px; text-align: center; font-size: 12px; }
+    .wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Monster</h2><div id="mons" class="grid"></div>
+  <h2>Schimmer</h2><div id="shiny" class="grid"></div>
+  <h2>Porträts</h2><div id="portraits" class="grid"></div>
+  <h2>Hintergründe</h2><div id="bgs" class="wide"></div>
+  <script src="js/files.js"></script>
+  <script>
+    (function () {
+      var list = LUM_FILES.logic;
+      list.forEach(function (src, i) {
+        var s = document.createElement('script');
+        s.src = src; s.async = false;
+        if (i === list.length - 1) s.onload = show;
+        document.body.appendChild(s);
+      });
+      function card(html, label) { return '<div class="card">' + html + '<div>' + label + '</div></div>'; }
+      function show() {
+        var L = LUM, a = '', b = '';
+        L.registry.all('species').forEach(function (sp) {
+          a += card(L.art.monster(sp.id, { size: 150 }), sp.name);
+          b += card(L.art.monster(sp.id, { size: 150, shiny: true, facing: 'left' }), sp.name + ' ✨');
+        });
+        document.getElementById('mons').innerHTML = a;
+        document.getElementById('shiny').innerHTML = b;
+        if (L.art.portrait) {
+          var p = '';
+          L.registry.all('character').forEach(function (c) {
+            if (!c.portrait) return;
+            ['neutral', 'froh', 'wuetend'].forEach(function (e) { p += card(L.art.portrait(c.id, e, { size: 150 }), c.name + ' · ' + e); });
+          });
+          document.getElementById('portraits').innerHTML = p;
+        }
+        if (L.art.background) {
+          var g = '';
+          ['wald', 'moor', 'schrein', 'arena_boss'].forEach(function (id) { g += card(L.art.background(id, { width: 360, height: 200 }), id); });
+          document.getElementById('bgs').innerHTML = g;
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

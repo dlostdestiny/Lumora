@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Lumora Tests</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; background: #1b1626; color: #eee; padding: 16px; }
+    .ok { color: #7ee08a; } .fail { color: #ff7a8a; } pre { white-space: pre-wrap; color: #ffb3bd; margin: 0 0 8px 24px; }
+    h1 { font-size: 20px; }
+  </style>
+</head>
+<body>
+  <h1 id="sum">Tests laufen …</h1>
+  <div id="out"></div>
+  <script src="js/files.js"></script>
+  <script src="tests/harness.js"></script>
+  <script src="tests/files.js"></script>
+  <script>
+    (function () {
+      var list = LUM_FILES.logic.concat(LUM_TEST_FILES);
+      list.forEach(function (src, i) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.async = false;
+        if (i === list.length - 1) s.onload = show;
+        document.body.appendChild(s);
+      });
+      function show() {
+        var res = TEST.run();
+        var out = document.getElementById('out');
+        res.lines.forEach(function (l) {
+          var d = document.createElement('div');
+          d.className = l.ok ? 'ok' : 'fail';
+          d.textContent = (l.ok ? '✓ ' : '✗ ') + l.name;
+          out.appendChild(d);
+          if (!l.ok) { var p = document.createElement('pre'); p.textContent = String(l.error && l.error.stack || l.error); out.appendChild(p); }
+        });
+        var errs = LUM.registry ? LUM.registry.validate() : [];
+        errs.forEach(function (e) { var d = document.createElement('div'); d.className = 'fail'; d.textContent = 'Daten: ' + e; out.appendChild(d); });
+        document.getElementById('sum').textContent = res.passed + ' bestanden, ' + res.failed + ' fehlgeschlagen' + (errs.length ? ', ' + errs.length + ' Datenfehler' : '');
+        document.getElementById('sum').className = res.failed || errs.length ? 'fail' : 'ok';
+      }
+    })();
+  </script>
+</body>
+</html>

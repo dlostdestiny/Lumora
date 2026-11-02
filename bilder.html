@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumora Bilder</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { padding: 20px; overflow: auto; max-width: 1100px; margin: 0 auto; line-height: 1.5; }
+    h1 { margin: 0 0 4px; } h2 { margin: 28px 0 8px; }
+    .steps { background: #2a2238; border-radius: 12px; padding: 12px 20px; }
+    .steps li { margin: 4px 0; }
+    code { background: #3a2f52; padding: 1px 6px; border-radius: 6px; }
+    .item { display: grid; grid-template-columns: 130px 1fr; gap: 14px; background: #2a2238; border-radius: 12px; padding: 12px; margin: 10px 0; align-items: start; }
+    .item.done { outline: 2px solid #7ee08a; }
+    .thumb { width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; background: #1b1626; border-radius: 10px; overflow: hidden; }
+    .thumb img, .thumb svg { max-width: 100%; max-height: 100%; }
+    .name { font-weight: 700; font-size: 17px; }
+    .file { color: #b9aecb; font-size: 13px; }
+    .status { font-size: 13px; margin-left: 8px; }
+    textarea { width: 100%; box-sizing: border-box; min-height: 92px; background: #1b1626; color: #f4eefc; border: 1px solid #4b3f63; border-radius: 8px; padding: 8px; font: 13px/1.4 system-ui, sans-serif; resize: vertical; }
+    button { background: #ffcf5a; color: #2b2238; border: 0; border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+    button.copied { background: #7ee08a; }
+    .counter { font-size: 18px; font-weight: 700; color: #ffcf5a; }
+    .done-box { margin-top: 28px; background: #2a2238; border-radius: 12px; padding: 10px 14px; }
+    .done-box summary { cursor: pointer; font-weight: 700; }
+    .done-box .item textarea, .done-box .item button { display: none; }
+    .wide .thumb { width: 220px; height: 124px; } .wide { grid-template-columns: 220px 1fr; }
+    @media (max-width: 600px) { .item, .wide { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>Bilder für Lumora</h1>
+  <p>Hier stehen alle Bilder, die dem Spiel <b>noch fehlen</b>. Bilder, die schon im Spiel sind, verschwinden automatisch aus der Liste. Kommen neue Monster oder Figuren dazu, erscheinen sie hier von selbst.</p>
+  <p class="counter" id="counter"></p>
+  <ol class="steps">
+    <li>Öffne einen Bildgenerator, zum Beispiel <b>Microsoft Copilot</b> (kostenlos), <b>ChatGPT</b> oder <b>Leonardo.ai</b>.</li>
+    <li>Klicke unten bei einem Monster auf <b>„Kopieren“</b> und füge den Text dort ein.</li>
+    <li>Gefällt dir das Bild nicht, lass einfach ein neues erzeugen oder schreib dazu, was anders sein soll.</li>
+    <li>Der Hintergrund sollte <b>durchsichtig</b> sein. Wenn er weiß ist, kannst du ihn auf <b>remove.bg</b> kostenlos entfernen lassen.</li>
+    <li><b>Einfachster Weg:</b> Lege das Bild in den Ordner <code>bilder für game</code> und sag Claude Bescheid. Claude erkennt das Bild, verkleinert es und baut es richtig ein.</li>
+    <li>Oder selbst: als <b>PNG</b> genau unter dem angezeigten Dateinamen speichern, zum Beispiel <code>img/monsters/glimmi.png</code> (Hintergründe als <code>.jpg</code>). Fehlt ein Bild, zeigt das Spiel automatisch die gezeichnete Version.</li>
+  </ol>
+  <p>Tipp: Erzeuge erst <b>ein</b> Monster, bis dir der Stil gefällt. Hänge dann bei allen weiteren „in the same style as before“ an, damit alle zusammenpassen.</p>
+
+  <h2 data-sec="mons">Monster</h2><div id="mons"></div>
+  <h2 data-sec="chars">Figuren</h2><div id="chars"></div>
+  <h2 data-sec="bgs">Hintergründe (Querformat 16:9)</h2><div id="bgs"></div>
+  <h2 data-sec="shiny">Schimmer-Varianten (freiwillig)</h2>
+  <p>Ohne eigenes Bild färbt das Spiel das normale Bild automatisch um.</p><div id="shiny"></div>
+  <details class="done-box"><summary id="done-sum">Schon im Spiel</summary><div id="done"></div></details>
+
+  <script src="js/files.js"></script>
+  <script>
+    (function () {
+      var list = LUM_FILES.logic.concat(['js/ui/artimg.js']);
+      list.forEach(function (src, i) {
+        var s = document.createElement('script');
+        s.src = src; s.async = false;
+        if (i === list.length - 1) s.onload = show;
+        document.body.appendChild(s);
+      });
+      function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+      function item(name, file, prompt, svg, wide) {
+        return '<div class="item' + (wide ? ' wide' : '') + '" data-file="' + file + '"><div class="thumb">' + svg + '</div><div>' +
+          '<div class="name">' + esc(name) + '<span class="status"></span></div><div class="file">Datei: <code>' + file + '</code></div>' +
+          '<textarea readonly>' + esc(prompt) + '</textarea><button type="button">Kopieren</button></div></div>';
+      }
+      // Zähler: offene Pflicht-Bilder (ohne freiwillige Schimmer) und fertige Bilder
+      function count() {
+        var open = ['mons', 'chars', 'bgs'].reduce(function (n, id) { return n + document.getElementById(id).children.length; }, 0);
+        var done = document.getElementById('done').children.length;
+        document.getElementById('counter').textContent = open ? 'Noch offen: ' + open + ' Bilder (dazu freiwillig Schimmer-Varianten)' : '🎉 Alle Pflicht-Bilder sind im Spiel! Nur die freiwilligen Schimmer-Varianten fehlen noch.';
+        document.getElementById('done-sum').textContent = 'Schon im Spiel (' + done + ')';
+        ['mons', 'chars', 'bgs', 'shiny'].forEach(function (id) {
+          var h = document.querySelector('[data-sec="' + id + '"]');
+          if (h) h.style.display = document.getElementById(id).children.length ? '' : 'none';
+        });
+      }
+      function show() {
+        var L = LUM, P = L.prompts, m = '', s = '', c = '', b = '';
+        L.registry.all('species').forEach(function (sp) {
+          m += item(sp.name, 'img/monsters/' + sp.id + '.png', P.styleMonster + ' ' + P.monsters[sp.id], L.art.monster(sp.id, { size: 120 }));
+          s += item(sp.name + ' (Schimmer)', 'img/monsters/' + sp.id + '_shiny.png', P.styleMonster + ' ' + P.monsters[sp.id] + ' ' + P.styleShinySuffix + P.shiny[sp.id] + '.', L.art.monster(sp.id, { size: 120, shiny: true }));
+        });
+        L.registry.all('character').forEach(function (ch) {
+          if (!ch.portrait) return;
+          c += item(ch.name + (ch.title ? ' – ' + ch.title : ''), 'img/portraits/' + ch.id + '.png', P.stylePortrait + ' ' + P.characters[ch.id], L.art.portrait(ch.id, 'neutral', { size: 110 }));
+        });
+        Object.keys(P.backgrounds).forEach(function (id) {
+          b += item(id, 'img/bg/' + id + '.jpg', P.styleBackground + ' ' + P.backgrounds[id], L.art.background(id, { width: 220, height: 124 }), true);
+        });
+        document.getElementById('mons').innerHTML = m;
+        document.getElementById('shiny').innerHTML = s;
+        document.getElementById('chars').innerHTML = c;
+        document.getElementById('bgs').innerHTML = b;
+        count();
+        document.querySelectorAll('.item').forEach(function (el) {
+          var btn = el.querySelector('button'), ta = el.querySelector('textarea');
+          btn.addEventListener('click', function () {
+            var done = function () { btn.textContent = 'Kopiert ✓'; btn.classList.add('copied'); setTimeout(function () { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 1500); };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, function () { ta.select(); document.execCommand('copy'); done(); });
+            else { ta.select(); document.execCommand('copy'); done(); }
+          });
+          // Vorhandenes Bild erkennen: dann in den Bereich „Schon im Spiel“ verschieben
+          var file = el.getAttribute('data-file');
+          var tries = [file];
+          if (/.jpg$/.test(file)) tries.push(file.replace(/.jpg$/, '.png'));
+          (function test(i) {
+            if (i >= tries.length) return;
+            var img = new Image();
+            img.onload = function () {
+              el.classList.add('done');
+              el.querySelector('.status').textContent = '✓ im Spiel';
+              el.querySelector('.thumb').innerHTML = '';
+              el.querySelector('.thumb').appendChild(img);
+              document.getElementById('done').appendChild(el);
+              count();
+            };
+            img.onerror = function () { test(i + 1); };
+            img.src = tries[i] + '?t=' + Date.now();
+          })(0);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
